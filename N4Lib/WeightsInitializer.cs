@@ -11,15 +11,5 @@ public sealed class WeightsInitializer
         => _rng.NextDouble();
 
     public double Next(IActivationFunction layerActivationFunction, int layerSize)
-        => layerActivationFunction.ToString() switch
-        {
-            // He-et-al
-            "ReLU" => Next() * Math.Sqrt(2 / (layerSize - 1)),
-         
-            // Xavier
-            "Tanh" => Next() * Math.Sqrt(1 / (layerSize - 1)),
-
-            // Heuristic
-            _ => Next() * Math.Sqrt(2 / (layerSize + layerSize - 1))
-        };
+        => Next() * layerActivationFunction.OptimizationFactor(layerSize);
 }

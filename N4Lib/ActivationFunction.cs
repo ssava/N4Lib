@@ -2,6 +2,18 @@
 
 public sealed record ActivationFunction : IActivationFunction
 {
+	private sealed class WeightOptimizers
+	{
+		public static readonly Func<double, double> HeuristingOptimization
+			= layerSize => Math.Sqrt(2 / (layerSize + layerSize - 1));
+
+		public static readonly Func<double, double> Xavier
+			= layerSize => Math.Sqrt(1 / (layerSize - 1));
+
+		public static readonly Func<double, double> HeEtAl
+			= layerSize => Math.Sqrt(2 / (layerSize - 1));
+	}
+
     public static readonly ActivationFunction Identity
 		= new(x => x, x => 1);
 
@@ -12,7 +24,7 @@ public sealed record ActivationFunction : IActivationFunction
               = new(x => x, x => x);
 
     public static readonly ActivationFunction ReLU
-              = new(x => x < 0 ? 0 : x, x => x < 0 ? 0 : 1);
+              = new(x => x < 0 ? 0 : x, x => x < 0 ? 0 : 1, WeightOptimizers.HeEtAl);
 
     public static readonly ActivationFunction Sigmoid
 		= new(
@@ -29,20 +41,37 @@ public sealed record ActivationFunction : IActivationFunction
 			prime: x => 1 / Math.Pow(1 + Math.Abs(x), 2)
 		);
 
-    private static readonly ActivationFunction Tanh
-		= new(x => Math.Tanh(x), x => Math.Pow(Math.Tanh(x), 2));
+    public static readonly ActivationFunction Tanh
+		= new(x => Math.Tanh(x), x => Math.Pow(Math.Tanh(x), 2), WeightOptimizers.Xavier);
 
     private Func<double, double> _activate { get; }
 
     private Func<double, double> _prime { get; }
 
+	private Func<double, double> _weightOptimization { get; }
+
     private ActivationFunction
         (Func<double, double> func, Func<double, double> prime)
-            => (_activate, _prime) = (func, prime);
+		: this(func, prime, WeightOptimizers.HeuristingOptimization)
+	{
+	}
+
+	private ActivationFunction
+        (Func<double, double> func,
+		 Func<double, double> prime,
+		 Func<double, double> weightOptimizer)
+	{
+		_activate = func;
+		_prime = prime;
+		_weightOptimization = weightOptimizer;
+	}
 
 	public double Activate(double x)
 		=> this._activate(x);
 
 	public double Prime(double x)
 		=> this._prime(x);
+
+	public double OptimizationFactor(double x)
+		=> this._weightOptimization(x);
 }
