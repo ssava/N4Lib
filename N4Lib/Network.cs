@@ -75,7 +75,7 @@ public sealed class Network
         }
     }
 
-    public async Task<IEnumerable<double>> FeedAsync(IEnumerable<double> values)
+    public async Task<IEnumerable<double>> FeedAsync(params double[] values)
     {
         if (values.Count() != _topology.InputSize)
             throw new ArgumentException("The length of data does not match network input");
