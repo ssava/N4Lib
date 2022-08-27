@@ -17,4 +17,9 @@ public sealed class NetworkTrainer
     {
         return 0.0f;
     }
+
+    public double StepEpoch(double learningRate)
+    {
+        return 0.0f;
+    }
 }
