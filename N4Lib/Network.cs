@@ -33,6 +33,12 @@ public sealed class Network
 
     private IEnumerable<Layer> _layers;
 
+    public int InputSize
+        => this._topology.InputSize;
+
+    public int OutputSize
+        => this._topology.OutputSize;
+
     public Network(Configuration topology)
     {
         _topology = topology;
