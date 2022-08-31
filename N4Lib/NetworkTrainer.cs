@@ -39,7 +39,7 @@ public sealed class NetworkTrainer
             var output = await Network.FeedAsync(input.ToArray() ?? Array.Empty<double>());
 
             // Calculate output delta
-            var delta = CalculateDelta(expectedOutput, output);
+            var delta = LossFunction.Loss(expectedOutput, output);
 
             // Backpropagate using output delta
             await BackpropagateAsync(delta);
@@ -48,22 +48,7 @@ public sealed class NetworkTrainer
         return 0.0f;
     }
 
-    private IEnumerable<double> CalculateDelta(IEnumerable<double> expected, IEnumerable<double> output)
-    {
-        if (expected.Count() != output.Count())
-            throw new ArgumentException($"Mismatch dimesion between expected ({expected.Count()}) and actual ({output.Count()})");
-
-        var delta = new double[expected.Count()];
-
-        for (int i = 0; i < expected.Count(); i++)
-        {
-            delta[i] = output.ElementAt(i) - expected.ElementAt(i);
-        }
-
-        return delta;
-    }
-
-    private Task BackpropagateAsync(IEnumerable<double> startDelta)
+    private Task BackpropagateAsync(double loss)
     {
         return Task.CompletedTask;
     }

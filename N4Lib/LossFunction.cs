@@ -8,7 +8,11 @@ public sealed class LossFunction
     /// </summary>
     /// <returns>MSE loss function instance</returns>
     public static readonly LossFunction MeanSquaredError
-        = new(x => x * 2, x => 2);
+        = new((expected, actual) => {
+            var squares = expected.Select((y, i) => Math.Pow(y - actual.ElementAt(i), 2));
+
+            return (1/expected.Count()) * squares.Sum();
+        });
 
     /// <summary>
     /// Binary Cross-Entropy (BCE for short).
@@ -17,7 +21,15 @@ public sealed class LossFunction
     /// <returns>BCE loss function instance</returns>
     /// <remarks>This function need ONE output node and Sigmoid function</remarks>
     public static readonly LossFunction BinaryCrossEntropy
-        => new(x => x, x => x);
+        = new((expected, actual) => {
+            var correctedProbabilities = expected.Select(
+                (y, i) => y != actual.ElementAt(i) ? 1 - y : y 
+            );
+
+            var logOfCorrectedProbabilities = correctedProbabilities.Select(p => Math.Log(p));
+
+            return (-1/expected.Count()) * logOfCorrectedProbabilities.Sum();
+        });
 
     /// <summary>
     /// Categorical Cross-Entropy (CCE for short).
@@ -25,8 +37,8 @@ public sealed class LossFunction
     /// </summary>
     /// <returns>CCE loss function instance</returns>
     /// <remarks>This function need N output, where N is the number of classes and output node should use SoftMax function</remarks>
-    public static readonly LossFunction CategoricalCrossEntropy
-        => new(x => x, x => x);
+    // public static readonly LossFunction CategoricalCrossEntropy
+    //     => new(x => x, x => x);
 
     /// <summary>
     /// Sparse Categorical Cross-Entropy (SCCE for short).
@@ -35,19 +47,19 @@ public sealed class LossFunction
     /// </summary>
     /// <returns>CCE loss function instance</returns>
     /// <remarks>This function need N output, where N is the number of classes and output node should use SoftMax function</remarks>
-    public static readonly LossFunction SparseCategoricalCrossEntropy
-        => new(x => x, x => x);
+    // public static readonly LossFunction SparseCategoricalCrossEntropy
+    //     => new(x => x, x => x);
 
-    private readonly Func<double, double> _function;
+    private readonly Func<IEnumerable<double>, IEnumerable<double>, double> _function;
 
-    private readonly Func<double, double> _prime;
+    private LossFunction(Func<IEnumerable<double>, IEnumerable<double>, double> loss)
+        => this._function = loss;
 
-    private LossFunction(Func<double, double> loss, Func<double, double> prime)
-        => (this._function, this._prime) = (loss, prime);
+    public double Loss(IEnumerable<double> actual, IEnumerable<double> expected)
+    {
+        if (actual.Count() != expected.Count())
+            throw new InvalidOperationException("Both actual and expected vectors should have the same sizes!");
 
-    public double Loss(double x)
-        => this._function(x);
-
-    public double Prime(double x)
-        => this._prime(x);
+        return this._function(actual, expected);
+    }
 }
